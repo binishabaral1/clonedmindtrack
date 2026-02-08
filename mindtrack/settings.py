@@ -89,18 +89,15 @@ WSGI_APPLICATION = 'mindtrack.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'mindtrack_db'),
-        'USER': os.getenv('DB_USER', 'postgres'),
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': os.getenv('DB_NAME', os.path.join(BASE_DIR, 'db.sqlite3')),
+        'USER': os.getenv('DB_USER', ''),
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
-        #'OPTIONS': {
-         #   'client_encoding': 'UTF8',
-        # },
-        #'CONN_MAX_AGE': 600,  # Optional: keep database connections alive for 10 minutes
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', ''),
     }
-}   
+}
+
 
 
 # Password validation
