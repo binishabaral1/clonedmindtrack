@@ -1,4 +1,3 @@
-# mindtrack/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -12,6 +11,7 @@ urlpatterns = [
     path('analysis/', include('analysis.urls')),
     path('chatbot/', include('chatbot.urls')),
     path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('payments/', include('payments.urls')),
 ]
 
 if settings.DEBUG:
