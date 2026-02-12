@@ -11,6 +11,7 @@ urlpatterns = [
     path('analysis/', include('analysis.urls')),
     path('chatbot/', include('chatbot.urls')),
     path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('khalti/', include('khalti.urls')),
     path('payments/', include('payments.urls')),
 ]
 
