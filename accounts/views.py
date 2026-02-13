@@ -5,6 +5,7 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib import messages
+from accounts.models import Profile  # make sure this is imported
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(
@@ -52,6 +53,8 @@ class CustomUserCreationForm(UserCreationForm):
         user.email = self.cleaned_data["email"]
         if commit:
             user.save()
+            # Ensure a Profile is created immediately after saving the user
+            Profile.objects.get_or_create(user=user)
         return user
 
 class CustomAuthenticationForm(AuthenticationForm):
@@ -77,14 +80,15 @@ def login_view(request):
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
-            # Get the username/email entered
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
             
-            # Try to authenticate with email backend
             user = authenticate(request, username=username, password=password)
             
             if user is not None:
+                # Make sure the user has a Profile before login
+                Profile.objects.get_or_create(user=user)
+
                 login(request, user)
                 messages.success(request, f'Welcome back, {user.username}!')
                 return redirect('dashboard')
