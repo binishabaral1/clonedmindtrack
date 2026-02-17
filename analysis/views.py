@@ -64,3 +64,6 @@ def analyze_mood(request):
             return JsonResponse({"success": False, "message": "Server error occurred"}, status=500)
 
     return JsonResponse({"success": False, "message": "Invalid request"}, status=400)
+
+
+

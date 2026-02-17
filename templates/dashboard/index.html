@@ -12,7 +12,13 @@
         </div>
         <div class="user-actions">
             <span class="free-counter">
-                Free analyses left: <strong id="freeCounter">{{ free_analyses_remaining }}/3</strong>
+                Free analyses left: <strong id="freeCounter">
+    {% if free_analyses_remaining == 'Unlimited' %}
+        Unlimited
+    {% else %}
+        {{ free_analyses_remaining }}/3
+    {% endif %}
+</strong>
             </span>
             <form method="post" action="{% url 'logout' %}" style="display:inline;">
                 {% csrf_token %}
@@ -37,7 +43,13 @@
             <div class="stat-icon">🧠</div>
             <div class="stat-content">
                 <h3>Free Analyses Remaining</h3>
-                <p class="stat-number" id="freeAnalysesCount">{{ free_analyses_remaining }}/3</p>
+                <p class="stat-number" id="freeAnalysesCount">
+                    {% if user.profile.is_premium %}
+                        Unlimited
+                    {% else %}
+                        {{ free_analyses_remaining }}/3
+                    {% endif %}
+               </p>
             </div>
         </div>
         
@@ -918,8 +930,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const errorMessage = document.getElementById('errorMessage');
     const errorText = document.getElementById('errorText');
     
-    // Current free analyses counter
-    let freeAnalysesRemaining = parseInt('{{ free_analyses_remaining }}') || 3;
     
     // Character counter
     if (moodInput && charCount) {
@@ -972,13 +982,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Check if user has free analyses left
-        if (freeAnalysesRemaining <= 0) {
-            showError('You have used all free analyses. Please upgrade to premium.');
-            document.querySelector('.upgrade-section').scrollIntoView({ 
-                behavior: 'smooth' 
-            });
-            return;
-        }
+        // if (freeAnalysesRemaining <= 0) {
+        //     showError('You have used all free analyses. Please upgrade to premium.');
+        //     document.querySelector('.upgrade-section').scrollIntoView({ 
+        //         behavior: 'smooth' 
+        //     });
+        //     return;
+        // }
         
         // Show loading state
         analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
@@ -989,30 +999,44 @@ document.addEventListener('DOMContentLoaded', function() {
         resultsPlaceholder.style.display = 'none';
         
         // SIMULATE API CALL WITH LOCAL ANALYSIS
-        setTimeout(() => {
-            try {
-                // Perform local mood analysis
-                const result = performLocalMoodAnalysis(text);
-                
-                // Decrease free analyses counter
-                freeAnalysesRemaining = Math.max(0, freeAnalysesRemaining - 1);
-                
-                // Update UI counters
-                updateCounters(freeAnalysesRemaining);
-                
-                // Display results
-                displayResults(result);
-                
-            } catch (error) {
-                console.error('Analysis error:', error);
-                showError('Analysis failed. Please try again.');
-            } finally {
-                // Reset button state
-                analyzeBtn.innerHTML = '<i class="fas fa-brain"></i> Analyze Mood';
-                analyzeBtn.disabled = false;
-            }
-        }, 1500); // Simulate network delay
+        // Make POST request to Django backend
+fetch("{% url 'analyze_mood' %}", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": "{{ csrf_token }}"
+    },
+    body: new URLSearchParams({ text: text })
+})
+.then(response => response.json())
+.then(data => {
+    if (data.success) {
+        // ✅ Update counters from backend
+        updateCounters(data.free_remaining, data.premium);
+
+        // Display results using backend mood
+        displayResults({
+            mood: data.mood,
+            mood_key: data.mood.toLowerCase(),
+            confidence: '100%',
+            emotions: {},
+            free_remaining: data.free_remaining,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+    } else {
+        showError(data.message || "Analysis failed.");
     }
+})
+.catch(error => {
+    console.error("Fetch error:", error);
+    showError("Analysis failed. Please try again.");
+})
+.finally(() => {
+    analyzeBtn.innerHTML = '<i class="fas fa-brain"></i> Analyze Mood';
+    analyzeBtn.disabled = false;
+});
+   
+}
     
     // Local mood analysis function
     function performLocalMoodAnalysis(text) {
@@ -1212,12 +1236,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Update counters
-    function updateCounters(newCount) {
-        // Update all counters
+  function updateCounters(newCount, isPremium) {
+    if (isPremium) {
+        document.getElementById('freeCounter').textContent = `Unlimited`;
+        document.getElementById('freeAnalysesCount').textContent = `Unlimited`;
+        document.getElementById('remainingCount').textContent = `Unlimited`;
+    } else {
         document.getElementById('freeCounter').textContent = `${newCount}/3`;
         document.getElementById('freeAnalysesCount').textContent = `${newCount}/3`;
         document.getElementById('remainingCount').textContent = newCount;
     }
+}
+
     
     // Helper functions
     function showError(message) {

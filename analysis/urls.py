@@ -11,9 +11,10 @@
 # ]
 # analysis/urls.py
 from django.urls import path
-from .views import analyze_mood
+from . import views
 
 urlpatterns = [
-    path('analyze/', analyze_mood, name='analyze_mood'),
+    # path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('analyze/', views.analyze_mood, name='analyze_mood'),
 ]
 
