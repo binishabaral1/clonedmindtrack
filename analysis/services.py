@@ -72,17 +72,27 @@ class MoodAnalyzer:
             }
         
         # Find dominant mood
-        total = sum(scores.values())
-        emotions = {mood: score/total for mood, score in scores.items()}
-        detected_mood = max(scores, key=scores.get)
-        confidence = scores[detected_mood] / total
-        
-        return {
-            'detected_mood': detected_mood,
-            'confidence': round(confidence, 2),
-            'emotions': emotions
-        }
-    
+        total_score = sum(scores.values())
+
+if total_score > 0:
+    detected_mood = max(scores, key=scores.get)
+    emotions = {k: v / total_score for k, v in scores.items()}
+
+    # ✅ Improved confidence logic
+    confidence = (scores[detected_mood] / total_score) * (min(total_score, 3) / 3)
+
+else:
+    detected_mood = "neutral"
+    emotions = {
+        'happy': 0.2,
+        'sad': 0.2,
+        'angry': 0.1,
+        'fear': 0.1,
+        'neutral': 0.3,
+        'surprise': 0.1
+    }
+    confidence = 0.5
+
     @staticmethod
     def analyze_text_api(text, api_key=None):
         """

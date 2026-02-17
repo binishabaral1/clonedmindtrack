@@ -1011,18 +1011,18 @@ fetch("{% url 'analyze_mood' %}", {
 .then(response => response.json())
 .then(data => {
     if (data.success) {
-        // ✅ Update counters from backend
+
         updateCounters(data.free_remaining, data.premium);
 
-        // Display results using backend mood
         displayResults({
             mood: data.mood,
             mood_key: data.mood.toLowerCase(),
-            confidence: '100%',
-            emotions: {},
+            confidence: data.confidence,  // ✅ USE BACKEND VALUE
+            emotions: data.emotions,
             free_remaining: data.free_remaining,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         });
+
     } else {
         showError(data.message || "Analysis failed.");
     }
@@ -1035,7 +1035,7 @@ fetch("{% url 'analyze_mood' %}", {
     analyzeBtn.innerHTML = '<i class="fas fa-brain"></i> Analyze Mood';
     analyzeBtn.disabled = false;
 });
-   
+
 }
     
     // Local mood analysis function
