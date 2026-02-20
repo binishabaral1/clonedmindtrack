@@ -287,48 +287,63 @@
             });
         }
         
-        // Password toggle functionality
-        const toggleSignInPassword = document.getElementById('toggleSignInPassword');
-        const toggleSignUpPassword = document.getElementById('toggleSignUpPassword');
-        const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
-        const signInPassword = document.getElementById('id_password');
-        const signUpPassword = document.getElementById('id_password1');
-        const confirmPassword = document.getElementById('id_password2');
-        
-        function togglePasswordVisibility(passwordField, toggleButton) {
-            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordField.setAttribute('type', type);
+        // FIXED: Password toggle functionality with direct event binding
+        function setupPasswordToggle(toggleButtonId, passwordFieldId) {
+            const toggleButton = document.getElementById(toggleButtonId);
+            const passwordField = document.getElementById(passwordFieldId);
             
-            const icon = toggleButton.querySelector('i');
-            if (type === 'text') {
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
+            if (toggleButton && passwordField) {
+                // Remove any existing event listeners by cloning and replacing
+                const newButton = toggleButton.cloneNode(true);
+                toggleButton.parentNode.replaceChild(newButton, toggleButton);
+                
+                // Add click event to the new button
+                newButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordField.setAttribute('type', type);
+                    
+                    const icon = this.querySelector('i');
+                    if (icon) {
+                        if (type === 'text') {
+                            icon.classList.remove('fa-eye');
+                            icon.classList.add('fa-eye-slash');
+                        } else {
+                            icon.classList.remove('fa-eye-slash');
+                            icon.classList.add('fa-eye');
+                        }
+                    }
+                    
+                    // Force focus back to password field
+                    passwordField.focus();
+                    return false;
+                });
+                
+                // Make sure button is clickable
+                newButton.style.position = 'absolute';
+                newButton.style.right = '10px';
+                newButton.style.top = '50%';
+                newButton.style.transform = 'translateY(-50%)';
+                newButton.style.background = 'none';
+                newButton.style.border = 'none';
+                newButton.style.cursor = 'pointer';
+                newButton.style.padding = '10px';
+                newButton.style.zIndex = '9999';
+                newButton.style.pointerEvents = 'auto';
             }
         }
         
-        if (toggleSignInPassword) {
-            toggleSignInPassword.addEventListener('click', function() {
-                togglePasswordVisibility(signInPassword, this);
-            });
-        }
-        
-        if (toggleSignUpPassword) {
-            toggleSignUpPassword.addEventListener('click', function() {
-                togglePasswordVisibility(signUpPassword, this);
-            });
-        }
-        
-        if (toggleConfirmPassword) {
-            toggleConfirmPassword.addEventListener('click', function() {
-                togglePasswordVisibility(confirmPassword, this);
-            });
-        }
+        // Setup all password toggles
+        setupPasswordToggle('toggleSignInPassword', 'id_password');
+        setupPasswordToggle('toggleSignUpPassword', 'id_password1');
+        setupPasswordToggle('toggleConfirmPassword', 'id_password2');
         
         // Password strength indicator
+        const signUpPassword = document.getElementById('id_password1');
         const passwordStrength = document.getElementById('passwordStrength');
+        
         if (signUpPassword && passwordStrength) {
             signUpPassword.addEventListener('input', function() {
                 checkPasswordStrength(this.value);
@@ -358,6 +373,16 @@
                 passwordStrength.classList.add('password-strong');
             }
         }
+        
+        // FIX: Adjust input padding to make room for the eye button
+        const inputWithIcons = document.querySelectorAll('.input-with-icon');
+        inputWithIcons.forEach(container => {
+            const input = container.querySelector('input');
+            const button = container.querySelector('button');
+            if (input && button) {
+                input.style.paddingRight = '40px';
+            }
+        });
     });
     
     // Terms and Privacy functions
